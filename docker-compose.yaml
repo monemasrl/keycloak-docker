@@ -1,0 +1,41 @@
+version: '3'
+
+volumes:
+  postgres_data:
+      driver: local
+
+services:
+  postgresql:
+    image: docker.io/bitnami/postgresql:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - POSTGRESQL_USERNAME=bn_keycloak
+      - POSTGRESQL_DATABASE=bitnami_keycloak
+      - POSTGRESQL_LOG_CONNECTIONS=true
+      - POSTGRESQL_LOG_HOSTNAME=true
+    volumes:
+      - 'postgresql_data:/bitnami/postgresql'
+  keycloak:
+      image: docker.io/bitnami/keycloak:latest
+      environment:
+        - KEYCLOAK_CREATE_ADMIN_USER=true
+        - VIRTUAL_HOST=<NGINX_PROXY_VIRTUALHOST>
+        - VIRTUAL_PORT=8080
+        - LETSENCRYPT_HOST=<NGINX_PROXY_LETSENCRYPT_HOST>
+        - LETSENCRYPT_EMAIL=<LETSENCRYPT_MAIL>
+      depends_on:
+        - postgresql
+      networks:
+        - default
+        - proxy
+
+volumes:
+  postgresql_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
+  proxy:
+    name: nginx-proxy
+    external: true
